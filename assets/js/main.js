@@ -1,28 +1,34 @@
 /*
-	Read Only by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+	Transitive by TEMPLATED
+	templated.co @templatedco
+	Released for free under the Creative Commons Attribution 3.0 license (templated.co/license)
 */
 
 (function($) {
 
 	skel.breakpoints({
-		xlarge: '(max-width: 1680px)',
-		large: '(max-width: 1280px)',
-		medium: '(max-width: 1024px)',
-		small: '(max-width: 736px)',
-		xsmall: '(max-width: 480px)'
+		xlarge:	'(max-width: 1680px)',
+		large:	'(max-width: 1280px)',
+		medium:	'(max-width: 980px)',
+		small:	'(max-width: 736px)',
+		xsmall:	'(max-width: 480px)'
 	});
 
 	$(function() {
 
-		var $body = $('body'),
+		var	$window = $(window),
+			$body = $('body'),
 			$header = $('#header'),
-			$nav = $('#nav'), $nav_a = $nav.find('a'),
-			$wrapper = $('#wrapper');
+			$banner = $('#banner');
 
-		// Fix: Placeholder polyfill.
-			$('form').placeholder();
+		// Disable animations/transitions until the page has loaded.
+			$body.addClass('is-loading');
+
+			$window.on('load', function() {
+				window.setTimeout(function() {
+					$body.removeClass('is-loading');
+				}, 100);
+			});
 
 		// Prioritize "important" elements on medium.
 			skel.on('+medium -medium', function() {
@@ -32,81 +38,101 @@
 				);
 			});
 
+		// Fix: Placeholder polyfill.
+			$('form').placeholder();
+
 		// Header.
-			var ids = [];
+			if (skel.vars.IEVersion < 9)
+				$header.removeClass('alt');
 
-			// Set up nav items.
-				$nav_a
-					.scrolly({ offset: 44 })
-					.on('click', function(event) {
+			if ($banner.length > 0
+			&&	$header.hasClass('alt')) {
 
-						var $this = $(this),
-							href = $this.attr('href');
+				$window.on('resize', function() { $window.trigger('scroll'); });
 
-						// Not an internal link? Bail.
-							if (href.charAt(0) != '#')
-								return;
+				$banner.scrollex({
+					bottom:		$header.outerHeight(),
+					terminate:	function() { $header.removeClass('alt'); },
+					enter:		function() { $header.addClass('alt'); },
+					leave:		function() { $header.removeClass('alt'); $header.addClass('reveal'); }
+				});
 
-						// Prevent default behavior.
-							event.preventDefault();
+			}
 
-						// Remove active class from all links and mark them as locked (so scrollzer leaves them alone).
-							$nav_a
-								.removeClass('active')
-								.addClass('scrollzer-locked');
+		// Banner.
 
-						// Set active class on this link.
-							$this.addClass('active');
+			if ($banner.length > 0) {
 
-					})
-					.each(function() {
+				// IE fix.
+					if (skel.vars.IEVersion < 12) {
 
-						var $this = $(this),
-							href = $this.attr('href'),
-							id;
+						$window.on('resize', function() {
 
-						// Not an internal link? Bail.
-							if (href.charAt(0) != '#')
-								return;
+							var wh = $window.height() * 0.60,
+								bh = $banner.height();
 
-						// Add to scrollzer ID list.
-							id = href.substring(1);
-							$this.attr('id', id + '-link');
-							ids.push(id);
+							$banner.css('height', 'auto');
 
-					});
+							window.setTimeout(function() {
 
-			// Initialize scrollzer.
-				$.scrollzer(ids, { pad: 300, lastHack: true });
+								if (bh < wh)
+									$banner.css('height', wh + 'px');
 
-		// Off-Canvas Navigation.
+							}, 0);
 
-			// Title Bar.
-				$(
-					'<div id="titleBar">' +
-						'<a href="#header" class="toggle"></a>' +
-						'<span class="title">' + $('#logo').html() + '</span>' +
-					'</div>'
-				)
-					.appendTo($body);
+						});
 
-			// Header.
-				$('#header')
-					.panel({
-						delay: 500,
-						hideOnClick: true,
-						hideOnSwipe: true,
-						resetScroll: true,
-						resetForms: true,
-						side: 'right',
-						target: $body,
-						visibleClass: 'header-visible'
-					});
+						$window.on('load', function() {
+							$window.triggerHandler('resize');
+						});
 
-			// Fix: Remove navPanel transitions on WP<10 (poor/buggy performance).
-				if (skel.vars.os == 'wp' && skel.vars.osVersion < 10)
-					$('#titleBar, #header, #wrapper')
-						.css('transition', 'none');
+					}
+
+				// Video check.
+					var video = $banner.data('video');
+
+					if (video)
+						$window.on('load.banner', function() {
+
+							// Disable banner load event (so it doesn't fire again).
+								$window.off('load.banner');
+
+							// Append video if supported.
+								if (!skel.vars.mobile
+								&&	!skel.breakpoint('large').active
+								&&	skel.vars.IEVersion > 9)
+									$banner.append('<video autoplay loop><source src="' + video + '.mp4" type="video/mp4" /><source src="' + video + '.webm" type="video/webm" /></video>');
+
+						});
+
+				// More button.
+					$banner.find('.more')
+						.addClass('scrolly');
+
+			}
+
+		// Scrolly.
+			if ( $( ".scrolly" ).length ) {
+
+				var $height = $('#header').height() * 0.95;
+
+				$('.scrolly').scrolly({
+					offset: $height
+				});
+			}
+
+		// Menu.
+			$('#menu')
+				.append('<a href="#menu" class="close"></a>')
+				.appendTo($body)
+				.panel({
+					delay: 500,
+					hideOnClick: true,
+					hideOnSwipe: true,
+					resetScroll: true,
+					resetForms: true,
+					side: 'right'
+				});
 
 	});
 
